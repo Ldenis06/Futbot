@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FulboBot - Chatbot de Remeras</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f9fafb;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+  header {
+    background-color: #004aad;
+    color: white;
+    padding: 15px 20px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    text-align: center;
+  }
+  #options {
+    background: white;
+    border-bottom: 1px solid #ddd;
+    padding: 10px 15px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+  .option-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.25s ease;
+    user-select: none;
+  }
+  .option-btn:hover {
+    background: #0056b3;
+  }
+  #chat-container {
+    flex-grow: 1;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    padding: 15px;
+    overflow-y: auto;
+  }
+  #chat-box {
+    flex-grow: 1;
+    overflow-y: auto;
+  }
+  .message {
+    margin-bottom: 12px;
+    max-width: 70%;
+    padding: 12px 16px;
+    border-radius: 18px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+  }
+  .bot-message {
+    background: #007bff;
+    color: white;
+    align-self: flex-start;
+  }
+  .user-message {
+    background: #e0e0e0;
+    color: #222;
+    align-self: flex-end;
+  }
+  #input-area {
+    display: flex;
+    padding-top: 10px;
+    border-top: 1px solid #ddd;
+  }
+  #user-input {
+    flex-grow: 1;
+    border: 1px solid #ccc;
+    border-radius: 20px 0 0 20px;
+    padding: 12px 16px;
+    font-size: 1rem;
+    outline: none;
+  }
+  #send-btn {
+    background: #007bff;
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 0 20px;
+    cursor: pointer;
+    font-size: 1rem;
+    border-radius: 0 20px 20px 0;
+    transition: background-color 0.25s ease;
+  }
+  #send-btn:hover {
+    background: #0056b3;
+  }
+  pre {
+    background: #222;
+    color: #0f0;
+    padding: 12px;
+    border-radius: 12px;
+    overflow-x: auto;
+    font-family: monospace;
+    white-space: pre-wrap;
+    max-width: 90%;
+  }
+</style>
+</head>
+<body>
+
+<header>FulboBot - Tu asistente de Remeras Personalizadas ⚽👕</header>
+
+<div id="options" aria-label="Opciones de consulta">
+  <button class="option-btn" data-op="1">1. Precios de camisetas</button>
+  <button class="option-btn" data-op="2">2. Precios de shorts</button>
+  <button class="option-btn" data-op="3">3. Precios de conjuntos</button>
+  <button class="option-btn" data-op="4">4. Descuento por cantidad</button>
+  <button class="option-btn" data-op="5">5. Tiempo de entrega</button>
+  <button class="option-btn" data-op="6">6. Talles disponibles</button>
+  <button class="option-btn" data-op="7">7. Envíos a provincias</button>
+  <button class="option-btn" data-op="8">8. Métodos de pago</button>
+  <button class="option-btn" data-op="9">9. Devoluciones</button>
+  <button class="option-btn" data-op="10">10. Factura de ejemplo</button>
+</div>
+
+<div id="chat-container" role="main" aria-live="polite" aria-atomic="false">
+  <div id="chat-box" tabindex="0"></div>
+  <div id="input-area">
+    <input type="text" id="user-input" placeholder="Escribí el número o mensaje..." aria-label="Campo de entrada de mensaje" autocomplete="off" />
+    <button id="send-btn" aria-label="Enviar mensaje">Enviar</button>
+  </div>
+</div>
+
+<script>
+  const chatBox = document.getElementById('chat-box');
+  const userInput = document.getElementById('user-input');
+  const sendBtn = document.getElementById('send-btn');
+  const optionButtons = document.querySelectorAll('.option-btn');
+  const ancho = 60;
+
+  function centrar(texto) {
+    let espacios = Math.floor((ancho - texto.length) / 2);
+    return ' '.repeat(espacios > 0 ? espacios : 0) + texto;
+  }
+
+  // Agrega mensaje del bot
+  function addBotMessage(text, isPre = false) {
+    if (isPre) {
+      const pre = document.createElement('pre');
+      pre.textContent = text;
+      pre.classList.add('bot-message');
+      chatBox.appendChild(pre);
+    } else {
+      const div = document.createElement('div');
+      div.classList.add('message', 'bot-message');
+      div.textContent = text;
+      chatBox.appendChild(div);
+    }
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  // Agrega mensaje del usuario
+  function addUserMessage(text) {
+    const div = document.createElement('div');
+    div.classList.add('message', 'user-message');
+    div.textContent = text;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  function generarFactura() {
+    let lines = [];
+    lines.push("=".repeat(ancho));
+    lines.push(centrar("REMERAS FUTBOL PERSONALIZADAS S.A."));
+    lines.push(centrar("CUIT: 30-12345678-9"));
+    lines.push(centrar("Domicilio: Av. Siempre Viva 1234, CABA"));
+    lines.push(centrar("Tel: (011) 1234-5678"));
+    lines.push("=".repeat(ancho));
+    lines.push(centrar("FACTURA DE COMPRA"));
+    lines.push("=".repeat(ancho));
+    lines.push("Cliente: Juan Pérez".padEnd(ancho/2) + "DNI: 30.123.456".padStart(ancho/2));
+    lines.push(`Fecha: ${new Date().toLocaleString()}`.padEnd(ancho));
+    lines.push("-".repeat(ancho));
+    lines.push("Producto".padEnd(30) + "Cant.".padStart(5) + "P. Unit".padStart(10) + "Subtotal".padStart(10));
+    lines.push("-".repeat(ancho));
+    const productos = [
+      {descripcion: "Camiseta personalizada", cantidad: 3, precio_unitario: 16000},
+      {descripcion: "Short personalizado", cantidad: 2, precio_unitario: 15000},
+      {descripcion: "Conjunto personalizado", cantidad: 1, precio_unitario: 27000}
+    ];
+    let total = 0;
+    productos.forEach(item => {
+      const subtotal = item.cantidad * item.precio_unitario;
+      total += subtotal;
+      lines.push(item.descripcion.padEnd(30) + 
+        item.cantidad.toString().padStart(5) + 
+        ("$"+item.precio_unitario.toLocaleString()).padStart(10) + 
+        ("$"+subtotal.toLocaleString()).padStart(10));
+    });
+    lines.push("-".repeat(ancho));
+    lines.push("TOTAL".padStart(55) + ("$"+total.toLocaleString()).padStart(10));
+    lines.push("Forma de pago: MercadoPago (alias: fulbo.customs)".padEnd(ancho));
+    lines.push("=".repeat(ancho));
+    lines.push(centrar("¡Gracias por tu compra!"));
+    lines.push("=".repeat(ancho));
+    return lines.join("\n");
+  }
+
+  function responder(opcion) {
+    switch (opcion) {
+      case '1':
+        return `👕 Camisetas / Musculosas:
+1 x $17.000
+3 x $16.000
+5 x $14.500
+10 x $12.000`;
+      case '2':
+        return `🩳 Shorts:
+1 x $16.000
+3 x $15.000
+5 x $14.000
+10 x $12.000`;
+      case '3':
+        return `👕+🩳 Conjuntos:
+1 x $27.000
+3 x $25.000
+5 x $23.000
+10 x $20.000`;
+      case '4':
+        return `💸 Descuento por cantidad:
+- 3 o más prendas: 5% de descuento
+- 5 o más prendas: 10% de descuento
+- 10 o más prendas: 15% de descuento`;
+      case '5':
+        return `⏱ Tiempo de entrega:
+- Para CABA: 3 a 5 días hábiles
+- Para resto del país: 5 a 7 días hábiles`;
+      case '6':
+        return `📏 Talles disponibles:
+- XS, S, M, L, XL, XXL
+- Para niños y adultos`;
+      case '7':
+        return `🚚 Envíos a provincias:
+- Sí, hacemos envíos a todo el país
+- Costo según distancia y peso`;
+      case '8':
+        return `💳 Métodos de pago:
+- MercadoPago
+- Transferencia bancaria
+- Efectivo (solo retiro en CABA)`;
+      case '9':
+        return `🔄 Devoluciones:
+- Se aceptan devoluciones dentro de 10 días hábiles
+- Solo prendas sin uso y con etiqueta`;
+      case '10':
+        return generarFactura();
+      default:
+        return "No entendí tu consulta. Elegí una opción del menú o escribí el número.";
+    }
+  }
+
+  function procesarEntrada(text) {
+    text = text.trim();
+    if (!text) return;
+
+    addUserMessage(text);
+
+    let opcion = text.match(/^\d+$/) ? text : null;
+    if (!opcion) {
+      // tratar de detectar opción en texto (podemos mejorar luego)
+      opcion = text.match(/\b(1|2|3|4|5|6|7|8|9|10)\b/);
+      opcion = opcion ? opcion[1] : null;
+    }
+    let respuesta = opcion ? responder(opcion) : "Por favor, elegí una opción del menú o escribí el número.";
+
+    // Si la respuesta es la factura (opción 10), mostrar en pre, sino texto normal
+    const esFactura = opcion === '10';
+
+    if (esFactura) {
+      addBotMessage(respuesta, true);
+    } else {
+      addBotMessage(respuesta);
+    }
+  }
+
+  sendBtn.addEventListener('click', () => {
+    if (userInput.value.trim()) {
+      procesarEntrada(userInput.value);
+      userInput.value = '';
+      userInput.focus();
+    }
+  });
+
+  userInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && userInput.value.trim()) {
+      procesarEntrada(userInput.value);
+      userInput.value = '';
+    }
+  });
+
+  optionButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const op = btn.getAttribute('data-op');
+      procesarEntrada(op);
+    });
+  });
+
+  // Mensaje de bienvenida
+  addBotMessage("Hola! Soy FulboBot, tu asistente para consultas sobre nuestras remeras personalizadas. Elegí una opción o escribí el número:\n\n" +
+    "1. Precios de camisetas\n" +
+    "2. Precios de shorts\n" +
+    "3. Precios de conjuntos\n" +
+    "4. Descuento por cantidad\n" +
+    "5. Tiempo de entrega\n" +
+    "6. Talles disponibles\n" +
+    "7. Envíos a provincias\n" +
+    "8. Métodos de pago\n" +
+    "9. Devoluciones\n" +
+    "10. Factura de ejemplo"
+  );
+</script>
+
+</body>
+</html>
+
